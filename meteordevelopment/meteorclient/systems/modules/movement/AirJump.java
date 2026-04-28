@@ -1,0 +1,61 @@
+/*
+ * Decompiled with CFR 0.152.
+ */
+package meteordevelopment.meteorclient.systems.modules.movement;
+
+import meteordevelopment.meteorclient.events.meteor.KeyEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.render.Freecam;
+import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
+import meteordevelopment.orbit.EventHandler;
+
+public class AirJump
+extends Module {
+    private final SettingGroup sgGeneral;
+    private final Setting<Boolean> maintainLevel;
+    private int level;
+
+    public AirJump() {
+        super(Categories.Movement, "air-jump", "Lets you jump in the air.");
+        this.sgGeneral = this.settings.getDefaultGroup();
+        this.maintainLevel = this.sgGeneral.add(((BoolSetting.Builder)((BoolSetting.Builder)((BoolSetting.Builder)new BoolSetting.Builder().name("maintain-level")).description("Maintains your current Y level when holding the jump key.")).defaultValue(false)).build());
+    }
+
+    @Override
+    public void onActivate() {
+        this.level = this.mc.player.getBlockPos().getY();
+    }
+
+    @EventHandler
+    private void onKey(KeyEvent event) {
+        if (Modules.get().isActive(Freecam.class) || this.mc.currentScreen != null || this.mc.player.isOnGround()) {
+            return;
+        }
+        if (event.action != KeyAction.Press) {
+            return;
+        }
+        if (this.mc.options.jumpKey.matchesKey(event.key, 0)) {
+            this.level = this.mc.player.getBlockPos().getY();
+            this.mc.player.jump();
+        } else if (this.mc.options.sneakKey.matchesKey(event.key, 0)) {
+            --this.level;
+        }
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Pre event) {
+        if (Modules.get().isActive(Freecam.class) || this.mc.player.isOnGround()) {
+            return;
+        }
+        if (this.maintainLevel.get().booleanValue() && this.mc.player.getBlockPos().getY() == this.level && this.mc.options.jumpKey.isPressed()) {
+            this.mc.player.jump();
+        }
+    }
+}
+

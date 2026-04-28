@@ -1,0 +1,41 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.network.packet.Packet
+ *  net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+ *  net.minecraft.util.math.Direction
+ */
+package meteordevelopment.meteorclient.systems.modules.world;
+
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.mixin.BlockHitResultAccessor;
+import meteordevelopment.meteorclient.systems.modules.Categories;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.orbit.EventHandler;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.util.math.Direction;
+
+public class BuildHeight
+extends Module {
+    public BuildHeight() {
+        super(Categories.World, "build-height", "Allows you to interact with objects at the build limit.");
+    }
+
+    @EventHandler
+    private void onSendPacket(PacketEvent.Send event) {
+        Packet<?> packet = event.packet;
+        if (!(packet instanceof PlayerInteractBlockC2SPacket)) {
+            return;
+        }
+        PlayerInteractBlockC2SPacket p = (PlayerInteractBlockC2SPacket)packet;
+        if (this.mc.world == null) {
+            return;
+        }
+        if (p.getBlockHitResult().getPos().y >= (double)this.mc.world.getTopY() && p.getBlockHitResult().getSide() == Direction.UP) {
+            ((BlockHitResultAccessor)p.getBlockHitResult()).setSide(Direction.DOWN);
+        }
+    }
+}
+

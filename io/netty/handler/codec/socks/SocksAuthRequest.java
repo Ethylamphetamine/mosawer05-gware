@@ -1,0 +1,61 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  io.netty.buffer.ByteBuf
+ *  io.netty.util.CharsetUtil
+ *  io.netty.util.internal.ObjectUtil
+ */
+package io.netty.handler.codec.socks;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.socks.SocksRequest;
+import io.netty.handler.codec.socks.SocksRequestType;
+import io.netty.handler.codec.socks.SocksSubnegotiationVersion;
+import io.netty.util.CharsetUtil;
+import io.netty.util.internal.ObjectUtil;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+
+public final class SocksAuthRequest
+extends SocksRequest {
+    private static final SocksSubnegotiationVersion SUBNEGOTIATION_VERSION = SocksSubnegotiationVersion.AUTH_PASSWORD;
+    private final String username;
+    private final String password;
+
+    public SocksAuthRequest(String username, String password) {
+        super(SocksRequestType.AUTH);
+        ObjectUtil.checkNotNull((Object)username, (String)"username");
+        ObjectUtil.checkNotNull((Object)password, (String)"password");
+        CharsetEncoder asciiEncoder = CharsetUtil.encoder((Charset)CharsetUtil.US_ASCII);
+        if (!asciiEncoder.canEncode(username) || !asciiEncoder.canEncode(password)) {
+            throw new IllegalArgumentException("username: " + username + " or password: **** values should be in pure ascii");
+        }
+        if (username.length() > 255) {
+            throw new IllegalArgumentException("username: " + username + " exceeds 255 char limit");
+        }
+        if (password.length() > 255) {
+            throw new IllegalArgumentException("password: **** exceeds 255 char limit");
+        }
+        this.username = username;
+        this.password = password;
+    }
+
+    public String username() {
+        return this.username;
+    }
+
+    public String password() {
+        return this.password;
+    }
+
+    @Override
+    public void encodeAsByteBuf(ByteBuf byteBuf) {
+        byteBuf.writeByte((int)SUBNEGOTIATION_VERSION.byteValue());
+        byteBuf.writeByte(this.username.length());
+        byteBuf.writeCharSequence((CharSequence)this.username, CharsetUtil.US_ASCII);
+        byteBuf.writeByte(this.password.length());
+        byteBuf.writeCharSequence((CharSequence)this.password, CharsetUtil.US_ASCII);
+    }
+}
+

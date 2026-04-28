@@ -1,0 +1,102 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  net.minecraft.client.gui.screen.Screen
+ *  net.minecraft.util.math.MathHelper
+ */
+package meteordevelopment.meteorclient.gui.themes.gonbleware.widgets;
+
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
+import meteordevelopment.meteorclient.gui.themes.gonbleware.GonbleWareGuiTheme;
+import meteordevelopment.meteorclient.gui.themes.gonbleware.GonbleWareWidget;
+import meteordevelopment.meteorclient.gui.utils.AlignmentX;
+import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.math.MathHelper;
+
+public class WGonbleWareModule
+extends WPressable
+implements GonbleWareWidget {
+    private final Module module;
+    private double titleWidth;
+    private double animationProgress1;
+    private double animationProgress2;
+
+    public WGonbleWareModule(Module module) {
+        this.module = module;
+        this.tooltip = module.description;
+        if (module.isActive()) {
+            this.animationProgress1 = 1.0;
+            this.animationProgress2 = 1.0;
+        } else {
+            this.animationProgress1 = 0.0;
+            this.animationProgress2 = 0.0;
+        }
+    }
+
+    @Override
+    public double pad() {
+        return this.theme.scale(4.0);
+    }
+
+    @Override
+    protected void onCalculateSize() {
+        double pad = this.pad();
+        if (this.titleWidth == 0.0) {
+            this.titleWidth = this.theme.textWidth(this.module.title);
+        }
+        this.width = pad + this.titleWidth + pad;
+        this.height = pad + this.theme.textHeight() + pad;
+    }
+
+    @Override
+    protected void onPressed(int button) {
+        if (button == 0) {
+            this.module.toggle();
+        } else if (button == 1) {
+            MeteorClient.mc.setScreen((Screen)this.theme.moduleScreen(this.module));
+        }
+    }
+
+    @Override
+    protected void onRender(GuiRenderer renderer, double mouseX, double mouseY, double delta) {
+        GonbleWareGuiTheme theme = this.theme();
+        double pad = this.pad();
+        this.animationProgress1 += delta * 4.0 * (double)(this.module.isActive() || this.mouseOver ? 1 : -1);
+        this.animationProgress1 = MathHelper.clamp((double)this.animationProgress1, (double)0.0, (double)1.0);
+        this.animationProgress2 += delta * 6.0 * (double)(this.module.isActive() ? 1 : -1);
+        this.animationProgress2 = MathHelper.clamp((double)this.animationProgress2, (double)0.0, (double)1.0);
+        if (this.animationProgress1 > 0.0) {
+            renderer.quad(this.x, this.y, this.width * this.animationProgress1, this.height, theme.moduleBackground.get());
+        }
+        if (this.animationProgress2 > 0.0) {
+            renderer.quad(this.x, this.y + this.height * (1.0 - this.animationProgress2), theme.scale(2.0), this.height * this.animationProgress2, theme.accentColor.get());
+        }
+        if (this.highlight) {
+            Color hColor = theme.highlightColor.get();
+            renderer.quad(this.x, this.y, this.width, 2.0, hColor);
+            renderer.quad(this.x, this.y, 2.0, this.height, hColor);
+            renderer.quad(this.x - 2.0 + this.width, this.y, 2.0, this.height, hColor);
+            renderer.quad(this.x, this.y - 2.0 + this.height, this.width, 2.0, hColor);
+        }
+        double x = this.x + pad;
+        double w = this.width - pad * 2.0;
+        if (theme.moduleAlignment.get() == AlignmentX.Center) {
+            x += w / 2.0 - this.titleWidth / 2.0;
+        } else if (theme.moduleAlignment.get() == AlignmentX.Right) {
+            x += w - this.titleWidth;
+        }
+        Color color = theme.textColor.get();
+        if (this.highlight) {
+            color = theme.textHighlightColor.get();
+        } else if (this.deactivate) {
+            color = theme.textDimColor.get();
+        }
+        renderer.text(this.module.title, x, this.y + pad, color, false);
+    }
+}
+

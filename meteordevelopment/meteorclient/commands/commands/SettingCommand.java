@@ -1,0 +1,72 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  com.mojang.brigadier.builder.LiteralArgumentBuilder
+ *  com.mojang.brigadier.builder.RequiredArgumentBuilder
+ *  net.minecraft.command.CommandSource
+ *  net.minecraft.util.Formatting
+ */
+package meteordevelopment.meteorclient.commands.commands;
+
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import meteordevelopment.meteorclient.commands.Command;
+import meteordevelopment.meteorclient.commands.arguments.ModuleArgumentType;
+import meteordevelopment.meteorclient.commands.arguments.SettingArgumentType;
+import meteordevelopment.meteorclient.commands.arguments.SettingValueArgumentType;
+import meteordevelopment.meteorclient.gui.GuiThemes;
+import meteordevelopment.meteorclient.gui.WidgetScreen;
+import meteordevelopment.meteorclient.gui.tabs.TabScreen;
+import meteordevelopment.meteorclient.gui.tabs.Tabs;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.Utils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.command.CommandSource;
+import net.minecraft.util.Formatting;
+
+public class SettingCommand
+extends Command {
+    public SettingCommand() {
+        super("settings", "Allows you to view and change module settings.", "s");
+    }
+
+    @Override
+    public void build(LiteralArgumentBuilder<CommandSource> builder) {
+        builder.then(SettingCommand.literal("hud").executes(context -> {
+            TabScreen screen = Tabs.get().get(3).createScreen(GuiThemes.get());
+            screen.parent = null;
+            Utils.screenToOpen = screen;
+            return 1;
+        }));
+        builder.then(SettingCommand.argument("module", ModuleArgumentType.create()).executes(context -> {
+            Module module = (Module)context.getArgument("module", Module.class);
+            WidgetScreen screen = GuiThemes.get().moduleScreen(module);
+            screen.parent = null;
+            Utils.screenToOpen = screen;
+            return 1;
+        }));
+        builder.then(SettingCommand.argument("module", ModuleArgumentType.create()).then(((RequiredArgumentBuilder)SettingCommand.argument("setting", SettingArgumentType.create()).executes(context -> {
+            Setting<?> setting = SettingArgumentType.get(context);
+            ModuleArgumentType.get(context).info("Setting (highlight)%s(default) is (highlight)%s(default).", setting.title, setting.get());
+            return 1;
+        })).then(SettingCommand.argument("value", SettingValueArgumentType.create()).executes(context -> {
+            String value;
+            Setting<?> setting = SettingArgumentType.get(context);
+            if (setting.parse(value = SettingValueArgumentType.get(context))) {
+                if (setting instanceof BoolSetting) {
+                    BoolSetting _setting;
+                    BoolSetting boolSetting = _setting = (BoolSetting)setting;
+                    ChatUtils.forceNextPrefixClass(this.getClass());
+                    ChatUtils.sendMsg(this.hashCode(), Formatting.GRAY, "Toggled (highlight)%s %s(default) %s(default).", ModuleArgumentType.get(context).title, setting.title, (Boolean)boolSetting.get() != false ? String.valueOf(Formatting.GREEN) + "on" : String.valueOf(Formatting.RED) + "off");
+                } else {
+                    ModuleArgumentType.get(context).info("Setting (highlight)%s(default) changed to (highlight)%s(default).", setting.title, value);
+                }
+            }
+            return 1;
+        }))));
+    }
+}
+

@@ -1,0 +1,29 @@
+/*
+ * Decompiled with CFR 0.152.
+ */
+package meteordevelopment.meteorclient.gui.themes.gonbleware;
+
+import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
+import meteordevelopment.meteorclient.gui.themes.gonbleware.GonbleWareGuiTheme;
+import meteordevelopment.meteorclient.gui.utils.BaseWidget;
+import meteordevelopment.meteorclient.gui.widgets.WWidget;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+
+public interface GonbleWareWidget
+extends BaseWidget {
+    default public GonbleWareGuiTheme theme() {
+        return (GonbleWareGuiTheme)this.getTheme();
+    }
+
+    default public void renderBackground(GuiRenderer renderer, WWidget widget, boolean pressed, boolean mouseOver) {
+        GonbleWareGuiTheme theme = this.theme();
+        double s = theme.scale(2.0);
+        renderer.quad(widget.x + s, widget.y + s, widget.width - s * 2.0, widget.height - s * 2.0, theme.backgroundColor.get(pressed, mouseOver));
+        SettingColor outlineColor = theme.outlineColor.get(pressed, mouseOver);
+        renderer.quad(widget.x, widget.y, widget.width, s, outlineColor);
+        renderer.quad(widget.x, widget.y + widget.height - s, widget.width, s, outlineColor);
+        renderer.quad(widget.x, widget.y + s, s, widget.height - s * 2.0, outlineColor);
+        renderer.quad(widget.x + widget.width - s, widget.y + s, s, widget.height - s * 2.0, outlineColor);
+    }
+}
+
